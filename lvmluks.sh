@@ -62,6 +62,7 @@ disk=$disk$part
 cryptsetup -s 256 -y luksFormat $disk
 cryptsetup luksOpen $disk crypt
 
+pvcreate /dev/mapper/crypt
 vgcreate vgenc /dev/mapper/crypt
 
 echo -e Chose your root partition size. eg. 10G/1024M
