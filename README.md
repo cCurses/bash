@@ -1,0 +1,6 @@
+bash-ventures
+=============
+
+Educational
+
+Blah!
