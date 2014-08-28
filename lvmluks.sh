@@ -14,7 +14,7 @@
 # Written by cCore@freenode
 
 
-echo -e 'This is a educational script that i wrote for my self. Feel free to molest it.\n'
+echo -e 'This is a educational script that i wrote for my self. Feel free to do what you want with it.\n'
 
 echo -e 'Select the disk you want to prepare for luks and lvm'
 read -e disk
