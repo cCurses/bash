@@ -19,8 +19,7 @@ echo -e 'This is a educational script that i wrote for my self. Feel free to mol
 echo -e 'Select the disk you want to prepare for luks and lvm'
 read -e disk
 
-echo -e '\n'
-echo -e 'Now we will use fdisk to partition the drive and create 2 partitions.'
+echo -e '\nNow we will use fdisk to partition the drive and create 2 partitions.'
 echo -e '1st partition will be used as /boot and will not be encrypted.'
 echo -e '2nd partition will be the remainder of the disk, and we will use this for the lvm encrypted part.\n'
 read -n1 -r -p "Press any key to continue..."
@@ -91,5 +90,4 @@ vgscan --mknodes
 vgchange -ay
 mkswap /dev/vgenc/swap
 
-echo '\n'
-echo -e 'All done :)\n''You can now run setup.'
+echo -e '\nAll done :)\n''You can now run setup.'
