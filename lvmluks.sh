@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
@@ -18,11 +17,16 @@ echo -e 'Select the disk you want to prepare for luks and lvm'
 ls -l /dev/[sh]d[a-z]
 read -e disk
 
+echo -e 'Would you like to fill the disk with random data?\nNOTE: This will take a while! But offers better cryptoanalytical integrity.\nY/N?'
+read = fill
+	if [ fill = 'y' ]; then
+	dd if=/dev/urandom of=$disk
+fi
+
 echo -e '\nNow we will use fdisk to partition the drive and create 2 partitions.'
 echo -e '1st partition will be used as /boot and will not be encrypted.'
 echo -e '2nd partition will be the remainder of the disk, and we will use this for the lvm encrypted part.\n'
 read -n1 -r -p "Press any key to continue..."
-
 fdisk $disk <<EOF
 d
 4
@@ -58,8 +62,8 @@ part='2'
 disk=$disk$part
 
 cryptsetup -s 256 -y luksFormat $disk
+sleep 2
 cryptsetup luksOpen $disk crypt
-
 pvcreate /dev/mapper/crypt
 
 echo -e '\nWould you like to set your own name on the volume group?\nIf not, i will create one called vgcrypt\nY/N?'
@@ -93,6 +97,6 @@ done
 
 vgscan --mknodes
 vgchange -ay
-#mkswap /dev/vgenc/swap
+mkswap /dev/vgenc/swap
 
 echo -e '\nAll done.\nYou can now run setup.'
