@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
@@ -14,10 +15,7 @@
 # Written by cCore@freenode
 
 echo -e 'Select the disk you want to prepare for luks and lvm'
-for i in /dev/[sd[a-z]hd[a-z]]
-do
-	ls -l /dev/sd[a-z]
-done
+ls -l /dev/[sh]d[a-z]
 read -e disk
 
 echo -e '\nNow we will use fdisk to partition the drive and create 2 partitions.'
