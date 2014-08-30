@@ -1,0 +1,102 @@
+#!/bin/bash
+
+echo -e '####################################################################################################'
+echo -e '####################################### Lukscrypt Helper 1.0 #######################################'
+echo -e '#################################### Written by cCore@freenode #####################################\n'
+
+echo -e 'Select the disk you want to prepare for luks and lvm'
+read -e disk
+
+echo -e '\n'
+echo -e 'Now we will use fdisk to partition the drive and create 2 partitions.'
+echo -e '1st partition will be used as /boot and will not be encrypted.'
+echo -e '2nd partition will be the remainder of the disk, and we will use this for the lvm encrypted part.\n'
+read -n1 -r -p "Press any key to continue..."
+
+fdisk $disk <<EOF 
+d
+4
+d
+3
+d
+2
+d
+1
+n
+p
+1
+
++100M
+a
+1
+n
+p
+2
+
+
+t
+2
+8e
+w
+EOF
+clear
+
+fdisk $disk -l
+echo -e 'Done partitioning\n''Now its time to luksformat the luks partition...\n'
+
+disk2='2'
+disk=$disk$disk2
+
+cryptsetup -s 256 -y luksFormat $disk
+cryptsetup luksOpen $disk crypt
+
+vgcreate vgenc /dev/mapper/crypt
+
+echo -e Chose your root partition size. eg. 10G/1024M
+	read -r root
+		lvcreate -L $root -n root vgenc
+echo -e Chose your home partition size. eg. 10G/1024M
+	read -r home
+		lvcreate -L $home -n home vgenc
+echo -e Chose your swap partition size. eg. 10G/1024M
+	read -r swap
+		lvcreate -L $swap -n swap vgenc
+
+echo -e '\nWould you like to create additional partitions?\ny/N'
+read -e ask
+if [ $ask = 'y' ]; then
+	echo -e 'Enter the mountpoint of your partition. eg. var'
+	read -e part1
+	echo -e 'Enter your '$part1' partition size. eg. 10G/1024M'
+	read -e size1
+	lvcreate -L $size1 -n $part1 vgenc
+else
+	echo 'Done'
+fi
+while true; do
+echo -e '\nWould you like to create additional partitions?\ny/N'
+read -e ask
+done
+if [ $ask = 'y' ]; then
+        echo -e 'Enter the mountpoint of your partition. eg. var'
+        read -e part1
+        echo -e 'Enter your '$part1' partition size. eg. 10G/1024M'
+        read -e size1
+        lvcreate -L $size1 -n $part1 vgenc
+else
+	echo 'Finishing'
+fi
+#while [ $ask = 'y' ]; then
+#        echo -e 'Would you like to add more?'
+#	read -e ask
+#
+#if [ $ask = 'y' ];
+# echo 'test'
+#fi
+
+vgscan --mknodes
+vgchange -ay
+
+#mkswap /dev/cryptvg/swap
+
+echo -e 'All done :)\n''You can now run setup.'
