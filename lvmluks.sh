@@ -13,10 +13,11 @@
 
 # Written by cCore@freenode
 
-
-echo -e 'This is a educational script that i wrote for my self. Feel free to molest it.\n'
-
 echo -e 'Select the disk you want to prepare for luks and lvm'
+for i in /dev/[sd[a-z]hd[a-z]]
+do
+	ls -l /dev/sd[a-z]
+done
 read -e disk
 
 echo -e '\nNow we will use fdisk to partition the drive and create 2 partitions.'
@@ -24,7 +25,7 @@ echo -e '1st partition will be used as /boot and will not be encrypted.'
 echo -e '2nd partition will be the remainder of the disk, and we will use this for the lvm encrypted part.\n'
 read -n1 -r -p "Press any key to continue..."
 
-fdisk $disk <<EOF 
+fdisk $disk <<EOF
 d
 4
 d
@@ -53,7 +54,7 @@ EOF
 clear
 
 fdisk $disk -l
-echo -e '\nDone partitioning\n''Let\'s encrypt some 1s and 0s\n'
+echo -e '\nDone partitioning\nLets encrypt some 1s and 0s\n'
 
 part='2'
 disk=$disk$part
@@ -62,8 +63,14 @@ cryptsetup -s 256 -y luksFormat $disk
 cryptsetup luksOpen $disk crypt
 
 pvcreate /dev/mapper/crypt
-vgcreate vgenc /dev/mapper/crypt
 
+echo -e '\nWould you like to set your own name on the volume group?\nIf not, i will create one called vgcrypt\nY/N?'
+	read -e askvg
+if [ $askvg = 'y' ]; then
+	echo -e 'Enter then name of your new volume group.'
+	read volumename
+		vgcreate vgcrypt /dev/mapper/crypt
+fi
 echo -e Chose your root partition size. eg. 10G/1024M
 	read -r root
 		lvcreate -L $root -n root vgenc
@@ -88,6 +95,6 @@ done
 
 vgscan --mknodes
 vgchange -ay
-mkswap /dev/vgenc/swap
+#mkswap /dev/vgenc/swap
 
-echo -e '\nAll done :)\n''You can now run setup.'
+echo -e '\nAll done.\nYou can now run setup.'
