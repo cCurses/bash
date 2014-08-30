@@ -87,10 +87,10 @@ echo -e '\nWould you like to create additional partitions?\nY/N'
 read -e ask
 while [ $ask = 'y' ]; do
 	echo -e 'Enter the mountpoint of your partition. eg. var'
-		read -e part1
-	echo -e 'Enter your '$part1' partition size. eg. 10G/1024M'
-		read -e size1
-		lvcreate -L $size1 -n $part1 vgenc
+		read -e newpart
+	echo -e 'Enter your '$newpart' partition size. eg. 10G/1024M'
+		read -e newsize
+		lvcreate -L $newsize -n $newsize vgenc
 	echo -e 'Add more?\nY/N'
 		read -e ask
 done
