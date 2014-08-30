@@ -59,11 +59,11 @@ fdisk $disk -l
 echo -e '\nDone partitioning\nLets encrypt some 1s and 0s\n'
 
 part='2'
-disk=$disk$part
+diskpart=$disk$part
 
-cryptsetup -s 256 -y luksFormat $disk
+cryptsetup -s 256 -y luksFormat $diskpart
 sleep 2
-cryptsetup luksOpen $disk crypt
+cryptsetup luksOpen $diskpart crypt
 pvcreate /dev/mapper/crypt
 
 echo -e '\nWould you like to set your own name on the volume group?\nIf not, i will create one called vgcrypt\nY/N?'
@@ -71,7 +71,7 @@ echo -e '\nWould you like to set your own name on the volume group?\nIf not, i w
 if [ $askvg = 'y' ]; then
 	echo -e 'Enter then name of your new volume group.'
 	read volumename
-		vgcreate vgcrypt /dev/mapper/crypt
+		vgcreate $volumename /dev/mapper/crypt
 fi
 echo -e Chose your root partition size. eg. 10G/1024M
 	read -r root
@@ -98,5 +98,6 @@ done
 vgscan --mknodes
 vgchange -ay
 mkswap /dev/vgenc/swap
+cryptsetup luksDump $disk
 
 echo -e '\nAll done.\nYou can now run setup.'
