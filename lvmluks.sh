@@ -18,6 +18,10 @@ echo -e 'Select the disk you want to prepare for luks and lvm'
 ls -l /dev/[sh]d[a-z]
 read -e disk
 
+if [ disk != '/' ]; then
+echo 'You must use full path.'
+	exit 1;
+fi
 echo -e '\nNow we will use fdisk to partition the drive and create 2 partitions.'
 echo -e '1st partition will be used as /boot and will not be encrypted.'
 echo -e '2nd partition will be the remainder of the disk, and we will use this for the lvm encrypted part.\n'
