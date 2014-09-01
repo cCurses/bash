@@ -1,0 +1,144 @@
+#!/bin/bash
+
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Written by cCore@freenode
+
+
+if [ "$(whoami)" != 'root' ]; then
+        echo 'Run as root.'
+        exit 1;
+fi
+
+ls -l /dev/[sh]d[a-z]
+
+read -e -p 'Select the disk you want to prepare for luks and lvm: ' disk
+while [[ $disk != /dev/[sh]d[a-z] ]];
+do
+	read -e -p 'Error. Try again: ' disk
+done
+
+read -p 'Would you like to fill the disk with random data? [Y/N]' fill
+while [[ $fill != [yYnN] ]];
+do
+	read -p 'Error. Try again. [Y/N]: ' fill
+if [[ $fill = [yY] ]];
+then
+	dd if=/dev/urandom of=$disk
+fi
+done
+
+read -n1 -r -p "Ready to partition the disk. Press any key to continue..."
+fdisk $disk <<EOF
+d
+4
+d
+3
+d
+2
+d
+1
+n
+p
+1
+
++100M
+a
+1
+n
+p
+2
+
+
+t
+2
+8e
+w
+EOF
+clear
+fdisk $disk -l
+
+echo -e '\nDone partitioning\nLets encrypt some 1s and 0s\n'
+part='2'
+diskpart=$disk$part
+
+cryptsetup -s 256 -y luksFormat $diskpart
+echo ''
+sleep 2
+cryptsetup luksOpen $diskpart crypt
+pvcreate /dev/mapper/crypt
+
+read -p 'Would you like to name your volume group? Default: vgenc [Y/N]' askvg
+while [[ $askvg != [yYnN] ]];
+        do
+                read -p 'Error. Try again. [Y/N] ' askvg
+done
+
+if [[ $askvg = [yY] ]];
+        then
+                read -p 'Name: ' volume
+while [[ $volume = *[a-z]* ]];
+        do
+                vgcreate $volume /dev/mapper/crypt
+break
+done
+fi
+volume=vgenc
+if [[ $askvg = [nN] ]]
+then
+	vgcreate $volume /dev/mapper/crypt
+fi
+read -p 'Chose your root partition size. eg. 10G/1024M: ' root
+while [[ $root != [0-9][GMgm] ]];
+	do
+		read -p 'Error. Try again. : ' root
+done
+lvcreate -L $root -n root $volume
+read -p 'Chose your home partition size. eg. 10G/1024M: ' home
+while [[ $home != [0-9][GMgm] ]];
+	do
+		read -p 'Error. Try again. : ' home
+done
+lvcreate -L $home -n home $volume
+read -p 'Chose your swap partition size. eg. 10G/1024M: ' swap
+while [[ $swap != [0-9][GMgm] ]];
+	do
+		read -p 'Error. Try again. : ' swap
+done
+lvcreate -L $swap -n swap $volume
+
+read -p 'Would you like to create additional partitions? [Y/N]' ask
+while [[ $ask != [yYnN] ]];
+	do
+		read -p 'Error. Try again. : ' ask
+done
+if [[ $ask = [yY] ]];
+	then
+		read -p 'Enter the mountpoint of your partition. eg. var: ' newpart
+while [[ $newpart = *[a-z]* ]]; do
+	read -p 'Enter your '$newpart' partition size. eg. 10G/1024M: ' newsize
+		while [[ $newsize = [0-9][GMgm] ]]; do
+lvcreate -L $newsize -n $newpart $volume
+read -p 'Add more? [Y/N]' ask
+done
+done
+fi
+
+vgscan --mknodes
+vgchange -ay
+if [ -e '/dev/vgenc/' ];
+then
+	mkswap /dev/vgenc/swap
+	else
+		mkswap /dev/$volume/swap
+fi
+echo -e '\nAll done.\nYou can now run setup.'
