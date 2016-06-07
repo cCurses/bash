@@ -62,7 +62,7 @@ echo -e '\nDone partitioning\nLets encrypt some 1s and 0s\n'
 part='2'
 diskpart=$disk$part
 
-cryptsetup --cipher aes-xts-plain64 --key-size 512 --hash sha512 --iter-time 5000 --use-random luksFormat $diskpart
+cryptsetup --cipher aes-xts-plain64 --key-size 512 --hash sha512 --iter-time 5000 --use-random --verify-passphrase luksFormat $diskpart
 echo ''
 sleep 2
 cryptsetup luksOpen $diskpart crypt
